@@ -159,8 +159,6 @@ def main():
 	header = header + "\n"
 	outfile.write(header)
 
-	seqLen = 50000
-
 	max_num_nucleotides = 8336
 
 	assert max_num_nucleotides % 4 == 0, (
@@ -209,15 +207,6 @@ def main():
 				else:
 					segments.append(curr)
 
-			'''
-			for i in range(len(segments)):
-				print("Before len:")
-				print(len(segments[i]))
-				segments[i] = segments[i].replace("N", "")		
-				print("After len:")
-				print(len(segments[i]))
-			'''	
-
 			#remove sequences that contain N
 			toRemoveSeg = []
 			toRemoveNames = []
@@ -231,22 +220,7 @@ def main():
 			#Make sure there is at least 1 segment without an N
 			if (len(segments) > 0):
 				probs = RunModel(parameters, segments, seqLen)
-			'''
-			print(currIdx)
-			segName = infile.readline()[1:]
-			segment = infile.readline()
-			if not segment:
-				break
-			segName = segName.strip()
-			segment = segment.strip()
 
-			if (len(segment) == seqLen):
-				RunModel(model, tokenizer, segment, segName, outfile, seqLen)
-			currIdx += 1
-			'''
-
-			#print(probs)
-			#print(probs.shape)
 			#write to outfile
 			for i in range(len(names)):
 				currLine = "%s,%s" % (names[i], segments[i])
@@ -296,10 +270,6 @@ def RunModel(parameters, segments, seqLen):
 	keys = jax.device_put_replicated(random_key, devices=devices)
 	parameters = jax.device_put_replicated(parameters, devices=devices)
 
-	for i in range(len(segments)):
-		print(len(segments[i]))	
-		print(segments[i])
-	
 	tokens_ids = [b[1] for b in tokenizer.batch_tokenize(segments)]
 	tokens_str = [b[0] for b in tokenizer.batch_tokenize(segments)]
 
@@ -320,13 +290,10 @@ def RunModel(parameters, segments, seqLen):
 	probabilities = np.asarray(jax.nn.softmax(logits, axis=-1))[...,-1]
 	print("probabilities:")
 	print(probabilities.shape)
-	
-			
+				
 	#get exon probabilities
 	idx_exon = config.features.index("exon")
 	probabilities_exon = probabilities[0, :, :, idx_exon]
-	print("probabilities exon:")
-	print(probabilities_exon.shape)
 	
 	return probabilities_exon
 
